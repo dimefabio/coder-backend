@@ -109,5 +109,9 @@ dist
 24-DESAFIO-LOGIN/keys/
 25-LOGIN-ATLAS/keys/
 
+#MAC FILES
+
+.DS_Store
+
 
 
