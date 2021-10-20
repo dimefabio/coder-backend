@@ -1,17 +1,54 @@
+// DEPENDENCIES REAL TIME
 const express = require("express");
 const app = express();
 const server = require("http").Server(app);
-const io = require("socket.io")(server);
 const moment = require('moment')
 const port = 8080
-const {Firebase} = require("./db")
+
+// DEPENDENCIES REAL TIME
+const io = require("socket.io")(server);
+
+// DEPENDENCIES DB
+const {Mongo} = require("./db")
 const mongoStore = require("connect-mongo")
+
+// DEPENDENCIES SESSION
 const session = require("express-session")
 const cookieParser = require("cookie-parser")
 
+//--------------------------------PASSPORT--------------------------------------
+
+const bcrypt = require("bcrypt") // for encryript passwords
+const passport = require("c")
+const LocalStrategy = require("passport-local").Strategy
+
+passport.use("login", new LocalStrategy({
+  passReqToCallback: true
+}, 
+function (req, username, passport, done){
+  let user = anibal.findUser(username, req, res)
+  if(!user) return done(null,false)
+  console.log(user)
+  // let sucess = user.username == user
+
+}
+
+))
+
+app.use(passport.initialize())
+app.use(passport.session())
+//--------------------------------END PASSPORT--------------------------------------
+
+
+// SETTING COOKIES AND ADVANCE OPTIONS
 app.use(cookieParser());
 const advancedOptions = {useNewUrlParser: true, useUnifiedTopology: true}
+
+
+// SETTING A VARIABLE WITHOUT VALUE
 var sessionAct;
+
+//FORMATING DATE WITH MOMENTJS
 var date = new Date()
 var dateConverted = moment(date).format('lll');
 
@@ -27,9 +64,11 @@ var auth = function (req, res , next) {
 
 // END AUTH MIDLEWARE
 
+// ASSIGN CLASS MONGO WITH PROPERTIES TO USE BELOW
+const anibal = new Mongo
 
-const anibal = new Firebase
 
+//FIRST STARTS CONNECTING TO DB
 anibal.connectDB()
 
 app.set('views','./views');
@@ -41,7 +80,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
   store: mongoStore.create({
-    mongoUrl: "mongodb+srv://coladmin:mosorio12@cluster0.kduye.mongodb.net/desafio25?retryWrites=true&w=majority",
+    mongoUrl: "mongodb+srv://coladmin:mosorio12@cluster0.kduye.mongodb.net/desafio26?retryWrites=true&w=majority",
     mongoOptions: advancedOptions
   }),
   secret: "djjfj",
@@ -65,15 +104,9 @@ app.use(express.static("public"));
 app.get('/vista', auth, (req, res) => {
   const userAct = req.session.user
 
-  // if(req.session.user)
-  // {
     res.render("index", {userAct});
-  // } else {
-  //   res.send("Usted no tiene privilegios para acceder")
-  // }
-
-   
 })
+
 
 app.get("/misesion", auth, (req, res) => {
   const { nombre } = req.query
@@ -107,20 +140,20 @@ app.get("/logout", (req, res, next) => {
 })
 
 
-io.on("connection", function (socket) {
-    console.log("Alguien se ha conectado con Sockets");
-    anibal.readMessage().then(data => {
-    socket.emit("mensajes", data);
-    })
-    socket.on("new-mensaje", function(data){
+// io.on("connection", function (socket) {
+//     console.log("Alguien se ha conectado con Sockets");
+//     anibal.readMessage().then(data => {
+//     socket.emit("mensajes", data);
+//     })
+//     socket.on("new-mensaje", function(data){
     
-        anibal.createMessage(data)
-        anibal.readMessage().then(data => {
-          console.log(data)
-        io.sockets.emit("mensajes", data);
-    });
-});
-});
+//         anibal.createMessage(data)
+//         anibal.readMessage().then(data => {
+//           console.log(data)
+//         io.sockets.emit("mensajes", data);
+//     });
+// });
+// });
 
 server.listen(port, function () {
   console.log("Servidor corriendo en http://localhost:" + port);
